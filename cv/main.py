@@ -12,11 +12,11 @@ emotions = ['Angry', 'Contempt', 'Disgust']
 
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
-video_capture = cv2.VideoCapture(0)
+video_capture = cv2.VideoCapture("offline/videos/dove.mp4")
 
 EMOJI_DIMENSION = 512
 CAPTURE_INTERVAL = 5
-IMGUR_API_KEY=''
+IMGUR_API_KEY='f2de9155b89b3f4'
 
 class Emoji(object):
     def __init__(self, filename):
@@ -57,7 +57,7 @@ def upload_image(filename):
           headers={'Authorization': 'Client-ID %s' % IMGUR_API_KEY},
           json={'image': encoded_string})
         url = res.json()['data']['link']
-        print url
+        print(url)
         return url
         
 def capture_and_upload_image(frame):

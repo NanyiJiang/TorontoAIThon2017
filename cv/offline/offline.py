@@ -5,6 +5,7 @@ import numpy as np
 
 filename = input()
 # filename = 'jengacat.mp4'
+# filename = 'leon.MOV'
 output_image = "output.jpg"
 video_capture = cv2.VideoCapture(filename)
 framecount = 0
@@ -20,14 +21,16 @@ while success:
     count += 1
     
     # captures frame every 5s
-    if framecount % (fps*5) == 0:
+    if int(framecount) % int(fps*5) == 0:
         framecount = 0
         array_image = np.array(frame)
         
         # test code to check that a image is saved every 5s
-        # output_image = "output" + str(count) + ".jpg"
+        output_image = "output" + str(count) + ".jpg"        
+        
         
         cv2.imwrite(output_image, frame)
+    
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
