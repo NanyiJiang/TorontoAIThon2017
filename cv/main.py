@@ -5,6 +5,7 @@ import requests
 import png
 import copy
 import time
+import base64
 
 
 emotions = ['Angry', 'Contempt', 'Disgust']
@@ -15,6 +16,7 @@ video_capture = cv2.VideoCapture(0)
 
 EMOJI_DIMENSION = 512
 CAPTURE_INTERVAL = 5
+IMGUR_API_KEY=''
 
 class Emoji(object):
     def __init__(self, filename):
@@ -45,6 +47,23 @@ def capture_image(frame):
     ss = png.from_array(new_frame, 'RGB')
     filename = '%d.png' % int(time.time())
     ss.save(filename)
+    return filename
+    
+    
+def upload_image(filename):
+    with open(filename, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read())
+        res = requests.post('https://api.imgur.com/3/image', 
+          headers={'Authorization': 'Client-ID %s' % IMGUR_API_KEY},
+          json={'image': encoded_string})
+        url = res.json()['data']['link']
+        print url
+        return url
+        
+def capture_and_upload_image(frame):
+    filename = capture_image(frame)
+    upload_image(filename)
+    
     
 has_captured = False
 while True:
@@ -73,7 +92,7 @@ while True:
         pass
         
     if int(time.time()) % CAPTURE_INTERVAL == 0:
-        capture_image(frame)
+        capture_and_upload_image(frame)
 
    # Display the resulting frame
     cv2.imshow('Video', frame)
