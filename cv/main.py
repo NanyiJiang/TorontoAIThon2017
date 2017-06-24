@@ -1,9 +1,13 @@
 import cv2
 import sys
 
+s_img = cv2.imread("ws.png")
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
 video_capture = cv2.VideoCapture(0)
+
+s_img = cv2.resize(s_img, (100, 100), interpolation = cv2.INTER_AREA)
+#s_img = cv2.cvtColor(s_img, cv2.COLOR_BGR2GRAY)
 
 while True:
     # Capture frame-by-frame
@@ -22,6 +26,11 @@ while True:
    # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        # capture image every 5 seconds
+        # send to your API
+        # change emoji to display
+    x=y=50
+    frame[y:y+s_img.shape[0], x:x+s_img.shape[1]] = s_img
 
    # Display the resulting frame
     cv2.imshow('Video', frame)
