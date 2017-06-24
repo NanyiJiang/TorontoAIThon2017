@@ -2,14 +2,34 @@ import cv2
 import sys
 import numpy as np
 
-emoji = cv2.imread("ws.png",cv2.IMREAD_UNCHANGED)
+emotions = ['Angry', 'Contempt', 'Disgust']
+
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
 video_capture = cv2.VideoCapture(0)
 
-emoji = cv2.resize(emoji, (100, 100), interpolation = cv2.INTER_AREA)
-emoji_alpha_channel = emoji[:,:,3].astype(np.float32) / 255.0
-emoji_rgb_channel = emoji[:,:,:3].astype(np.float32)
+EMOJI_DIMENSION = 512
+
+class Emoji(object):
+    def __init__(self, filename):
+        #import ipdb; ipdb.set_trace()
+        self.image = cv2.imread(filename, cv2.IMREAD_UNCHANGED)
+        #self.image = cv2.resize(image, (EMOJI_DIMENSION, EMOJI_DIMENSION), interpolation = cv2.INTER_AREA)
+        self.alpha_channel = self.image[:,:,3].astype(np.float32) / 255.0
+        self.rgb_channel = self.image[:,:,:3].astype(np.float32)
+
+    def blend_image(self, frame, x, y, width, height):
+        alpha_channel = cv2.resize(self.alpha_channel, (height, width))
+        rgb_channel = cv2.resize(self.rgb_channel, (height, width))
+        origin_img = frame[y:y+height, x:x+width].astype(np.float32)
+        front_img = np.stack([cv2.multiply(rgb_channel[:,:,channel_idx], alpha_channel) for channel_idx in range(3)], axis=2)
+        back_img = np.stack([cv2.multiply(origin_img[:,:,channel_idx], 1-alpha_channel) for channel_idx in range(3)], axis=2)
+        frame[y:y+height, x:x+width] = (front_img + back_img).astype(np.int)
+
+emojis = {}
+for emotion in emotions:
+    filename = "../Emoji/" + emotion + '.png'
+    emojis[emotion] = Emoji(filename)
 
 #s_img = cv2.cvtColor(s_img, cv2.COLOR_BGR2GRAY)
 
@@ -34,11 +54,12 @@ while True:
         # send to your API
         # change emoji to display
     x=y=50
-    height, width = emoji_alpha_channel.shape
-    origin_img = frame[y:y+height, x:x+width].astype(np.float32)
-    front_img = np.stack([cv2.multiply(emoji_rgb_channel[:,:,channel_idx], emoji_alpha_channel) for channel_idx in range(3)], axis=2)
-    back_img = np.stack([cv2.multiply(origin_img[:,:,channel_idx], 1-emoji_alpha_channel) for channel_idx in range(3)], axis=2)
-    frame[y:y+height, x:x+width] = (front_img + back_img).astype(np.int)
+    height, width = 100, 100
+    emojis['Angry'].blend_image(frame, x, y, width, height)
+    # origin_img = frame[y:y+height, x:x+width].astype(np.float32)
+    # front_img = np.stack([cv2.multiply(emoji_rgb_channel[:,:,channel_idx], emoji_alpha_channel) for channel_idx in range(3)], axis=2)
+    # back_img = np.stack([cv2.multiply(origin_img[:,:,channel_idx], 1-emoji_alpha_channel) for channel_idx in range(3)], axis=2)
+    # frame[y:y+height, x:x+width] = (front_img + back_img).astype(np.int)
     # = emoji_alpha_channel * frame[y:y+height, x:x+width] + (1-emoji_alpha_channel) * emoji_rgb_channel
 
    # Display the resulting frame
