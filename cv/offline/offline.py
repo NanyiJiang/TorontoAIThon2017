@@ -26,7 +26,7 @@ while success:
         array_image = np.array(frame)
         
         # test code to check that a image is saved every 5s
-        output_image = "output" + str(count) + ".jpg"        
+        # output_image = "output" + str(count) + ".jpg"        
         
         
         cv2.imwrite(output_image, frame)
