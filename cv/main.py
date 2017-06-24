@@ -1,6 +1,11 @@
 import cv2
 import sys, random
 import numpy as np
+import requests
+import png
+import copy
+import time
+
 
 emotions = ['Angry', 'Contempt', 'Disgust']
 
@@ -9,6 +14,7 @@ faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_d
 video_capture = cv2.VideoCapture(0)
 
 EMOJI_DIMENSION = 512
+CAPTURE_INTERVAL = 5
 
 class Emoji(object):
     def __init__(self, filename):
@@ -31,12 +37,23 @@ for emotion in emotions:
     filename = "../Emoji/" + emotion + '.png'
     emojis[emotion] = Emoji(filename)
 
-#s_img = cv2.cvtColor(s_img, cv2.COLOR_BGR2GRAY)
-
+    
+def capture_image(frame):
+    new_frame = copy.deepcopy(frame)
+    new_frame[:,:,0] = frame[:,:,2]
+    new_frame[:,:,2] = frame[:,:,0]
+    ss = png.from_array(new_frame, 'RGB')
+    filename = '%d.png' % int(time.time())
+    ss.save(filename)
+    
+has_captured = False
 while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
 
+    if not has_captured:
+      has_captured = True
+    
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = faceCascade.detectMultiScale(
@@ -52,12 +69,11 @@ while True:
         # capture image every 5 seconds
         # send to your API
         # change emoji to display
-        emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
-    # origin_img = frame[y:y+height, x:x+width].astype(np.float32)
-    # front_img = np.stack([cv2.multiply(emoji_rgb_channel[:,:,channel_idx], emoji_alpha_channel) for channel_idx in range(3)], axis=2)
-    # back_img = np.stack([cv2.multiply(origin_img[:,:,channel_idx], 1-emoji_alpha_channel) for channel_idx in range(3)], axis=2)
-    # frame[y:y+height, x:x+width] = (front_img + back_img).astype(np.int)
-    # = emoji_alpha_channel * frame[y:y+height, x:x+width] + (1-emoji_alpha_channel) * emoji_rgb_channel
+        # emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
+        pass
+        
+    if int(time.time()) % CAPTURE_INTERVAL:
+        capture_image(frame)
 
    # Display the resulting frame
     cv2.imshow('Video', frame)
