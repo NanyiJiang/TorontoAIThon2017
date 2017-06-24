@@ -1,5 +1,5 @@
 import cv2
-import sys
+import sys, random
 import numpy as np
 
 emotions = ['Angry', 'Contempt', 'Disgust']
@@ -49,13 +49,10 @@ while True:
 
    # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
         # capture image every 5 seconds
         # send to your API
         # change emoji to display
-    x=y=50
-    height, width = 100, 100
-    emojis['Angry'].blend_image(frame, x, y, width, height)
+        emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
     # origin_img = frame[y:y+height, x:x+width].astype(np.float32)
     # front_img = np.stack([cv2.multiply(emoji_rgb_channel[:,:,channel_idx], emoji_alpha_channel) for channel_idx in range(3)], axis=2)
     # back_img = np.stack([cv2.multiply(origin_img[:,:,channel_idx], 1-emoji_alpha_channel) for channel_idx in range(3)], axis=2)
