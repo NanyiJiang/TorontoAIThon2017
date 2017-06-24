@@ -72,7 +72,7 @@ while True:
         # emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
         pass
         
-    if int(time.time()) % CAPTURE_INTERVAL:
+    if int(time.time()) % CAPTURE_INTERVAL == 0:
         capture_image(frame)
 
    # Display the resulting frame
