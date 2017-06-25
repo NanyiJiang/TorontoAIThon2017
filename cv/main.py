@@ -23,14 +23,13 @@ faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_d
 video_capture = cv2.VideoCapture(0)
 
 cloudinary.config( 
-  cloud_name = "skysla", 
-  api_key = "959818257589146", 
-  api_secret = "DC6jM0L_tjYEcUXM3NYJgnh_qrw" 
+  cloud_name = "INSERT CLOUD NAME", 
+  api_key = "INSERT API KEY", 
+  api_secret = "INSERT API SECRET" 
 )
 
 EMOJI_DIMENSION = 512
 CAPTURE_INTERVAL = 5
-IMGUR_API_KEY='f2de9155b89b3f4'
 CLOSENESS_THRESHOLD = 1000*1000
 
 class Emoji(object):
@@ -82,7 +81,7 @@ def feedImageURL(url_link):
     headers = {
         # Request headers. Replace the placeholder key below with your subscription key.
         'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': '5fd2f9f7fbbc4f448fbda4e2b4ad6cf0',
+        'Ocp-Apim-Subscription-Key': 'INSERT AZURE EMOTIONS API TOKEN,
     }
     params = urllib.parse.urlencode({
     })
