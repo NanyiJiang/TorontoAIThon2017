@@ -52,12 +52,12 @@ def capture_image(frame):
     
 def upload_image(filename):
     with open(filename, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read())
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
         res = requests.post('https://api.imgur.com/3/image', 
           headers={'Authorization': 'Client-ID %s' % IMGUR_API_KEY},
           json={'image': encoded_string})
         url = res.json()['data']['link']
-        print url
+        print(url)
         return url
         
 def capture_and_upload_image(frame):
