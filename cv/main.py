@@ -10,6 +10,9 @@ import time
 import base64
 import pandas as pd
 import json
+import cloudinary
+
+from cloudinary import uploader
 
 
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -18,6 +21,12 @@ emotions = ['Angry', 'Contempt', 'Disgust']
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
 video_capture = cv2.VideoCapture(0)
+
+cloudinary.config( 
+  cloud_name = "skysla", 
+  api_key = "959818257589146", 
+  api_secret = "DC6jM0L_tjYEcUXM3NYJgnh_qrw" 
+)
 
 EMOJI_DIMENSION = 512
 CAPTURE_INTERVAL = 5
@@ -54,17 +63,13 @@ def capture_image(frame):
     filename = '%d.png' % int(time.time())
     ss.save(filename)
     return filename
+
     
-    
-def upload_image(filename):
-    with open(filename, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-        res = requests.post('https://api.imgur.com/3/image', 
-          headers={'Authorization': 'Client-ID %s' % IMGUR_API_KEY},
-          json={'image': encoded_string})
-        print(res.json())
-        url = res.json()['data']['link']
-        return url
+def upload_image(filename):  
+    url_json = uploader.upload(filename)
+    url = url_json['url']
+    print(url)
+    return url
         
 def capture_and_upload_image(frame):
     filename = capture_image(frame)
