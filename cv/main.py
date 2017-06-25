@@ -1,3 +1,5 @@
+import http.client, urllib.request, urllib.parse, urllib.error, base64, sys
+
 import cv2
 import sys, random
 import numpy as np
@@ -6,6 +8,9 @@ import png
 import copy
 import time
 import base64
+import pandas as pd
+import json
+
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 emotions = ['Angry', 'Contempt', 'Disgust']
@@ -57,14 +62,65 @@ def upload_image(filename):
         res = requests.post('https://api.imgur.com/3/image', 
           headers={'Authorization': 'Client-ID %s' % IMGUR_API_KEY},
           json={'image': encoded_string})
+        print(res.json())
         url = res.json()['data']['link']
-        print(url)
         return url
         
 def capture_and_upload_image(frame):
     filename = capture_image(frame)
-    upload_image(filename)
+    return upload_image(filename)
 
+
+def feedImageURL(url_link):
+    headers = {
+        # Request headers. Replace the placeholder key below with your subscription key.
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': '5fd2f9f7fbbc4f448fbda4e2b4ad6cf0',
+    }
+    params = urllib.parse.urlencode({
+    })
+    # Replace the example URL below with the URL of the image you want to analyze.
+    body = str({ 'url': str(url_link)  })
+    try:
+        conn = http.client.HTTPSConnection('westus.api.cognitive.microsoft.com')
+        conn.request("POST", "/emotion/v1.0/recognize?%s" % params, body, headers)
+        response = conn.getresponse()
+        data = response.read()
+        conn.close()
+        return data
+    except Exception as e:
+        print(e.args)
+
+
+def findScores(image_json):
+    face_timeline = pd.DataFrame(columns = {'disgust', 'surprise', 'anger', 'sadness', 'happiness', 'neutral', 'fear', 'contempt', 'height', 'width', 'left', 'top'})
+    image_json = image_json.decode()
+    image_json = json.loads(image_json)
+    num_faces = len(image_json)
+    for idx in range(num_faces):
+        emotion_score_values = image_json[idx]['scores']
+        face_dimensions = image_json[idx]['faceRectangle']
+        for key in face_dimensions.keys():
+            emotion_score_values[key] = face_dimensions[key]
+        face_timeline = face_timeline.append(emotion_score_values, ignore_index = True)
+    return face_timeline
+
+
+def returnEmotionDimensions(face_timeline):
+    num_faces = len(face_timeline)
+    df_emotions = face_timeline[['disgust', 'surprise', 'anger', 'sadness', 'happiness', 'neutral', 'fear', 'contempt']]
+    top_emotion = df_emotions.idxmax(axis = 1)
+    emotion_dimension_list = []
+    for num in range(num_faces):
+        emotion_dimension_json = {}
+        best_emotion = top_emotion[num]
+        emotion_dimension_json['emotion'] = best_emotion
+        emotion_dimension_json['top'] = face_timeline.loc[num]['top']
+        emotion_dimension_json['width'] = face_timeline.loc[num]['width']
+        emotion_dimension_json['height'] = face_timeline.loc[num]['height']
+        emotion_dimension_json['left'] = face_timeline.loc[num]['left']
+        emotion_dimension_list.append(emotion_dimension_json)
+    return emotion_dimension_list
 
 
 class Face(object):
@@ -75,7 +131,7 @@ class Face(object):
         self.y = y
         self.w = w
         self.h = h
-        self.emotion = None
+        self.emotion = 'Angry'
         self.face_id = Face.face_id
         Face.face_id += 1
 
@@ -98,6 +154,7 @@ def earth_mover(previous_frame_faces, current_frame_faces):
         if min_dis < CLOSENESS_THRESHOLD:
             prev, current = edges[min_dis]
             current.face_id = prev.face_id
+            current.emotion = prev.emotion
             new_edges = {}
             for dis, edge in edges.items():
                 if not (edge[0] in (prev, current) or edge[1] in (prev, current)):
@@ -142,6 +199,7 @@ while True:
         x, y, w, h = face.x, face.y, face.w, face.h
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
+        print(face.emotion)
         # cv2.putText(frame, 'hihi', f.get_center(),
         #     font,
         #     1,
@@ -149,9 +207,23 @@ while True:
     #import ipdb; ipdb.set_trace()
     previous_frame_faces = current_frame_faces
 
+    current_emotion_faces = []
+    if int(time.time()) % CAPTURE_INTERVAL == 0:
+        capture_image(frame)
+        # url = capture_and_upload_image(frame)
 
-    # if int(time.time()) % CAPTURE_INTERVAL == 0:
-    #     capture_and_upload_image(frame)
+        # azure_data = feedImageURL(url)
+        # face_scores = findScores(azure_data)
+        # emotion_dimensions_list = returnEmotionDimensions(face_scores)
+        # for face in emotion_dimensions_list:
+        #     x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
+        #     f = Face(x,y,w,h)
+        #     f.emotion = face['emotion']
+        #     current_emotion_faces.append(f)
+
+        # earth_mover(current_emotion_faces, current_frame_faces)
+
+
 
    # Display the resulting frame
     cv2.imshow('Video', frame)
