@@ -7,16 +7,17 @@ import copy
 import time
 import base64
 
-
+font = cv2.FONT_HERSHEY_SIMPLEX
 emotions = ['Angry', 'Contempt', 'Disgust']
 
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
-video_capture = cv2.VideoCapture("offline/videos/dove.mp4")
+video_capture = cv2.VideoCapture(0)
 
 EMOJI_DIMENSION = 512
 CAPTURE_INTERVAL = 5
 IMGUR_API_KEY='f2de9155b89b3f4'
+CLOSENESS_THRESHOLD = 1000*1000
 
 class Emoji(object):
     def __init__(self, filename):
@@ -63,9 +64,50 @@ def upload_image(filename):
 def capture_and_upload_image(frame):
     filename = capture_image(frame)
     upload_image(filename)
-    
-    
+
+
+
+class Face(object):
+    face_id = 0
+    face_id_displayed = {}
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.emotion = None
+        self.face_id = Face.face_id
+        Face.face_id += 1
+
+
+    def get_center(self):
+        return (self.x + self.w / 2.0, self.y + self.h / 2.0)
+
+def distance_squared_between(face1, face2):
+    x1, y1 = face1.get_center()
+    x2, y2 = face2.get_center()
+    return (x1 - x2) ** 2 + (y1 - y2) ** 2
+
+def earth_mover(previous_frame_faces, current_frame_faces):
+    edges = {}
+    for a in previous_frame_faces:
+        for b in current_frame_faces:
+            edges[distance_squared_between(a, b)] = (a, b)
+    while current_frame_faces and edges:
+        min_dis = min(edges.keys()) 
+        if min_dis < CLOSENESS_THRESHOLD:
+            prev, current = edges[min_dis]
+            current.face_id = prev.face_id
+            new_edges = {}
+            for dis, edge in edges.items():
+                if not (edge[0] in (prev, current) or edge[1] in (prev, current)):
+                    new_edges[dis] = edge
+            edges = new_edges
+        else:
+            break
+
 has_captured = False
+previous_frame_faces = []
 while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
@@ -84,15 +126,32 @@ while True:
     )
 
    # Draw a rectangle around the faces
+    current_frame_faces = []
     for (x, y, w, h) in faces:
+        if w * h < 2500:
+            continue
+        f = Face(x, y, w, h)
+        current_frame_faces.append(f)
+
+    earth_mover(previous_frame_faces, current_frame_faces)
+    for face in current_frame_faces:
         # capture image every 5 seconds
         # send to your API
         # change emoji to display
         # emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
-        pass
-        
-    if int(time.time()) % CAPTURE_INTERVAL == 0:
-        capture_and_upload_image(frame)
+        x, y, w, h = face.x, face.y, face.w, face.h
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
+        # cv2.putText(frame, 'hihi', f.get_center(),
+        #     font,
+        #     1,
+        #     (0, 255, 0))
+    #import ipdb; ipdb.set_trace()
+    previous_frame_faces = current_frame_faces
+
+
+    # if int(time.time()) % CAPTURE_INTERVAL == 0:
+    #     capture_and_upload_image(frame)
 
    # Display the resulting frame
     cv2.imshow('Video', frame)
