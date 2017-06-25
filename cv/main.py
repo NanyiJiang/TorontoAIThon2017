@@ -4,7 +4,7 @@ import cv2
 import sys, random
 import numpy as np
 import requests
-import png
+#import png
 import copy
 import time
 import base64
@@ -29,7 +29,7 @@ cloudinary.config(
 )
 
 EMOJI_DIMENSION = 512
-CAPTURE_INTERVAL = 5
+CAPTURE_INTERVAL = 10
 IMGUR_API_KEY='f2de9155b89b3f4'
 CLOSENESS_THRESHOLD = 1000*1000
 
@@ -57,11 +57,13 @@ for emotion in emotions:
     
 def capture_image(frame):
     new_frame = copy.deepcopy(frame)
-    new_frame[:,:,0] = frame[:,:,2]
-    new_frame[:,:,2] = frame[:,:,0]
-    ss = png.from_array(new_frame, 'RGB')
-    filename = '%d.png' % int(time.time())
-    ss.save(filename)
+    # new_frame[:,:,0] = frame[:,:,2]
+    # new_frame[:,:,2] = frame[:,:,0]
+
+    #ss = png.from_array(new_frame, 'RGB')
+    filename = '%d.jpg' % int(time.time())
+    cv2.imwrite(filename, new_frame)
+    #ss.save(filename)
     return filename
 
     
@@ -136,7 +138,7 @@ class Face(object):
         self.y = y
         self.w = w
         self.h = h
-        self.emotion = 'Angry'
+        self.emotion = 'neutral'
         self.face_id = Face.face_id
         Face.face_id += 1
 
@@ -187,6 +189,23 @@ while True:
         #flags=cv2.cv.CV_HAAR_SCALE_IMAGE
     )
 
+    if int(time.time()) % CAPTURE_INTERVAL == 0:
+        current_emotion_faces = []
+        #capture_image(frame)
+        url = capture_and_upload_image(frame)
+
+
+        #import ipdb; ipdb.set_trace()
+        azure_data = feedImageURL(url)
+        face_scores = findScores(azure_data)
+        emotion_dimensions_list = returnEmotionDimensions(face_scores)
+        for face in emotion_dimensions_list:
+            x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
+            f = Face(x,y,w,h)
+            f.emotion = face['emotion']
+            current_emotion_faces.append(f)
+
+        earth_mover(current_emotion_faces, current_frame_faces)
    # Draw a rectangle around the faces
     current_frame_faces = []
     for (x, y, w, h) in faces:
@@ -212,21 +231,7 @@ while True:
     #import ipdb; ipdb.set_trace()
     previous_frame_faces = current_frame_faces
 
-    current_emotion_faces = []
-    if int(time.time()) % CAPTURE_INTERVAL == 0:
-        #capture_image(frame)
-        url = capture_and_upload_image(frame)
 
-        azure_data = feedImageURL(url)
-        face_scores = findScores(azure_data)
-        emotion_dimensions_list = returnEmotionDimensions(face_scores)
-        for face in emotion_dimensions_list:
-            x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
-            f = Face(x,y,w,h)
-            f.emotion = face['emotion']
-            current_emotion_faces.append(f)
-
-        earth_mover(current_emotion_faces, current_frame_faces)
 
 
 
