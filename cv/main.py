@@ -16,7 +16,7 @@ from cloudinary import uploader
 
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-emotions = ['Angry', 'Contempt', 'Disgust']
+emotions = {'disgust':'Disgust', 'surprise':'Surprised', 'anger':'Angry', 'sadness':'Sad', 'happiness':'Happy', 'neutral':'Neutral', 'fear':'Fear', 'contempt':'Contempt' }
 
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
@@ -136,7 +136,7 @@ class Face(object):
         self.y = y
         self.w = w
         self.h = h
-        self.emotion = 'Angry'
+        self.emotion = 'angry'
         self.face_id = Face.face_id
         Face.face_id += 1
 
@@ -200,11 +200,11 @@ while True:
         # capture image every 5 seconds
         # send to your API
         # change emoji to display
-        # emojis[emotions[int(random.random()*3)]].blend_image(frame, x, y, w, h)
+        emojis[face.emotion].blend_image(frame, x, y, w, h)
         x, y, w, h = face.x, face.y, face.w, face.h
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
-        print(face.emotion)
+        #print(face.emotion)
         # cv2.putText(frame, 'hihi', f.get_center(),
         #     font,
         #     1,
@@ -214,19 +214,19 @@ while True:
 
     current_emotion_faces = []
     if int(time.time()) % CAPTURE_INTERVAL == 0:
-        capture_image(frame)
-        # url = capture_and_upload_image(frame)
+        #capture_image(frame)
+        url = capture_and_upload_image(frame)
 
-        # azure_data = feedImageURL(url)
-        # face_scores = findScores(azure_data)
-        # emotion_dimensions_list = returnEmotionDimensions(face_scores)
-        # for face in emotion_dimensions_list:
-        #     x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
-        #     f = Face(x,y,w,h)
-        #     f.emotion = face['emotion']
-        #     current_emotion_faces.append(f)
+        azure_data = feedImageURL(url)
+        face_scores = findScores(azure_data)
+        emotion_dimensions_list = returnEmotionDimensions(face_scores)
+        for face in emotion_dimensions_list:
+            x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
+            f = Face(x,y,w,h)
+            f.emotion = face['emotion']
+            current_emotion_faces.append(f)
 
-        # earth_mover(current_emotion_faces, current_frame_faces)
+        earth_mover(current_emotion_faces, current_frame_faces)
 
 
 
