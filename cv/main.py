@@ -115,7 +115,7 @@ def findScores(image_json):
 
 def returnEmotionDimensions(face_timeline):
     num_faces = len(face_timeline)
-    df_emotions = face_timeline[['disgust', 'surprise', 'anger', 'sadness', 'happiness', 'neutral', 'fear', 'contempt']]
+    df_emotions = face_timeline[['disgust', 'surprise', 'anger', 'sadness', 'happiness', 'fear', 'contempt']]
     top_emotion = df_emotions.idxmax(axis = 1)
     emotion_dimension_list = []
     for num in range(num_faces):
@@ -194,8 +194,6 @@ while True:
         #capture_image(frame)
         url = capture_and_upload_image(frame)
 
-
-        #import ipdb; ipdb.set_trace()
         azure_data = feedImageURL(url)
         face_scores = findScores(azure_data)
         emotion_dimensions_list = returnEmotionDimensions(face_scores)
