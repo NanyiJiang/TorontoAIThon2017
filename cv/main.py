@@ -151,6 +151,10 @@ def distance_squared_between(face1, face2):
     x2, y2 = face2.get_center()
     return (x1 - x2) ** 2 + (y1 - y2) ** 2
 
+face_id_to_emo = {
+    
+}
+
 def earth_mover(previous_frame_faces, current_frame_faces):
     edges = {}
     for a in previous_frame_faces:
@@ -161,7 +165,6 @@ def earth_mover(previous_frame_faces, current_frame_faces):
         if min_dis < CLOSENESS_THRESHOLD:
             prev, current = edges[min_dis]
             current.face_id = prev.face_id
-            current.emotion = prev.emotion
             new_edges = {}
             for dis, edge in edges.items():
                 if not (edge[0] in (prev, current) or edge[1] in (prev, current)):
@@ -200,7 +203,8 @@ while True:
         for face in emotion_dimensions_list:
             x, y, w, h = face['left'], face['top'] - face['height'], face['width'], face['height']
             f = Face(x,y,w,h)
-            f.emotion = face['emotion']
+            face_id_to_emo[f.face_id] = face['emotion']
+            #f.emotion = face['emotion']
             current_emotion_faces.append(f)
 
         earth_mover(current_emotion_faces, current_frame_faces)
@@ -217,8 +221,9 @@ while True:
         # capture image every 5 seconds
         # send to your API
         # change emoji to display
-        emojis[face.emotion].blend_image(frame, x, y, w, h)
+        emotion = face_id_to_emo[face.face_id] if face.face_id in face_id_to_emo else 'neutral'
         x, y, w, h = face.x, face.y, face.w, face.h
+        emojis[emotion].blend_image(frame, x, y, w, h)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
         #print(face.emotion)
