@@ -16,7 +16,7 @@ from cloudinary import uploader
 
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-emotions = {'disgust':'Disgust', 'surprise':'Surprised', 'anger':'Angry', 'sadness':'Sad', 'happiness':'Happy', 'neutral':'Neutral', 'fear':'Fear', 'contempt':'Contempt' }
+emotions = ['disgust', 'surprise', 'anger', 'sadness', 'happiness', 'neutral', 'fear', 'contempt' ]
 
 faceCascade = cv2.CascadeClassifier('haarcascades_cuda/haarcascade_frontalface_default.xml')
 
@@ -136,7 +136,7 @@ class Face(object):
         self.y = y
         self.w = w
         self.h = h
-        self.emotion = 'angry'
+        self.emotion = 'Angry'
         self.face_id = Face.face_id
         Face.face_id += 1
 
