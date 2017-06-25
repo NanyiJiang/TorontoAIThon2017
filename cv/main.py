@@ -29,7 +29,7 @@ cloudinary.config(
 )
 
 EMOJI_DIMENSION = 512
-CAPTURE_INTERVAL = 10
+CAPTURE_INTERVAL = 5
 IMGUR_API_KEY='f2de9155b89b3f4'
 CLOSENESS_THRESHOLD = 1000*1000
 
@@ -224,8 +224,8 @@ while True:
         emotion = face_id_to_emo[face.face_id] if face.face_id in face_id_to_emo else 'neutral'
         x, y, w, h = face.x, face.y, face.w, face.h
         emojis[emotion].blend_image(frame, x, y, w, h)
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
+        # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # cv2.putText(frame, str(face.face_id), tuple(int(a) for a in face.get_center()), font, 1,(255,255,255),2,cv2.LINE_AA)
         #print(face.emotion)
         # cv2.putText(frame, 'hihi', f.get_center(),
         #     font,
